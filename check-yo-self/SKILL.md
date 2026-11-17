@@ -4,8 +4,8 @@ description: >-
   Use when the user says "check yo self" (or "check yourself"), asks for a self-review of their
   own changes before a PR, merge or hand-off, or wants a diff, branch, PR or set of files checked
   for code smells, architectural smells, language anti-patterns, logic bugs, semantic overloading,
-  temporal coupling, representable illegal states, unhandled edge cases, code cleanliness or yappy
-  comments.
+  temporal coupling, representable illegal states, unhandled edge cases, security holes, test gaps,
+  resource leaks, breaking changes, code cleanliness or yappy comments.
 ---
 
 # Check yo self
@@ -41,18 +41,22 @@ once.
 ## 2. Dispatch every lens at once
 
 One message, one Agent call per lens, all in parallel: `general-purpose` agents with the most capable
-model passed explicitly (e.g. `model: "opus"`), never inherited. All eight run whatever the diff's
+model passed explicitly (e.g. `model: "opus"`), never inherited. All twelve run whatever the diff's
 size; if the user named lenses (e.g. `bugs, edges`), run only those. Over about 2,000 changed lines,
 split the files into areas and give each lens one agent per area.
 
 | Lens | Looks for |
 |---|---|
-| **code-smells** | Long functions, duplication, deep nesting, flag arguments, magic values, primitive obsession, feature envy, speculative generality |
+| **code-smells** | Long functions, duplication within the change or of a helper the codebase already has (search for one before accepting new utility code), deep nesting, flag arguments, magic values, primitive obsession, feature envy, speculative generality |
 | **architecture** | Dependency direction and layering, import cycles, logic in the wrong module, leaky abstractions, tight coupling, one-implementation interfaces, state owned in two places |
 | **anti-patterns** | The idioms of the changed files' languages and frameworks, judged by the project's own lint config and conventions (e.g. TS: `any`, non-null `!`, floating promises, mutable exports) |
-| **logic-bugs** | Wrong conditions, off-by-one, inverted checks, races, state-machine holes, wrong error propagation. Traces every caller of a changed function |
+| **logic-bugs** | Wrong conditions, off-by-one, inverted checks, races, state-machine holes, wrong error propagation, silent failures (errors caught and ignored, logged and carried on past, or hidden behind a fallback or default value). Traces every caller of a changed function |
 | **invariants** | Semantic overloading (one name, field, flag or return value carrying two meanings, e.g. `null` meaning both "absent" and "failed", a missing field doubling as a signal); temporal coupling (calls that must happen in an unstated order, init-before-use, setters that must precede a method, state valid only between two calls); representable illegal states (types or data shapes that allow combinations the code must never see, e.g. `{ok: true, error}`, two booleans that can't both be true, optional fields that are required together), and whether a discriminated union, constructor or narrower type would make them unrepresentable |
-| **edge-cases** | Empty, null, huge or malformed input; dependency failures, timeouts, partial failure, concurrency, retries, data written by an older version |
+| **edge-cases** | Empty, null, huge or malformed input; dependency failures, timeouts, partial failure, concurrency, retries |
+| **security** | Injection (SQL, shell, HTML, template), missing authentication or authorization checks, secrets in code, config or logs, path traversal, SSRF, unsafe deserialization, personal data written to logs or errors, input trusted across a trust boundary without validation |
+| **tests** | Changed behavior with no test; tests that would still pass if the logic broke; tests asserting internals rather than behavior; mocks that hide the real failure; flaky timing, sleeps and order dependence; missing negative and boundary cases |
+| **resources** | Listeners, timers, handles, connections and subscriptions never released; caches, maps and queues that grow without bound; N+1 calls; repeated work or quadratic loops on hot paths; missing timeouts or cancellation |
+| **compatibility** | Breaking changes to public APIs, schemas, config, CLI flags or message formats; data written by an older version; missing or irreversible migrations; old and new versions running side by side during a rollout; whether a rollback is safe |
 | **cleanliness** | Naming, dead code, unused imports and parameters, leftover debug output and TODOs, inconsistency with the surrounding code, lint and format issues |
 | **comments** | Loads the `yeet-yo-yap` skill and applies its rules to the comments the change adds or touches, reporting each change it would make without making it |
 
