@@ -88,12 +88,12 @@ a why, a precondition, or a constraint that lives somewhere else.
 ### Say the useful things
 
 13. **A short "why", only where the code would look wrong or fragile without it.** One clause,
-    stated as a fact about the constraint. Good: `// Chrome applies the first matching rule, so
-    this mapping comes first`. Bad: a paragraph on how the problem was found. Likewise a
+    stated as a fact about the constraint. Good: `// The router uses the first matching route, so
+    /users/me comes before /users/:id`. Bad: a paragraph on how the problem was found. Likewise a
     non-trivial regex, bit trick or external format gets a one-line gloss or a spec pointer
     (`RFC 1035 §4`).
 14. **Warn about consequences elsewhere.** When a change here breaks or must be mirrored somewhere
-    else, say where: `// Kept in sync with RULE_ORDER in blockingService.ts`, `// The golden HAR
+    else, say where: `// Kept in sync with ERROR_CODES in api/errors.ts`, `// The snapshot test
     pins this shape`. Put it at the point a future editor will touch.
 15. **Document the contract, not the implementation.** On a public function, type or module: a
     sentence giving the mental model, then the precise parts a caller needs without reading the
@@ -205,7 +205,7 @@ History and a ticket:
 
 ```ts
 // Before
-// WORK-1234: this used to throw, but now it returns null so callers can retry
+// PROJ-1234: this used to throw, but now it returns null so callers can retry
 // After
 // Callers retry on null
 ```
@@ -214,11 +214,11 @@ Session chatter and a perishable number:
 
 ```ts
 // Before
-// Per review feedback, bumped this since the page currently takes ~40s to settle
-const SETTLE_TIMEOUT_MS = 60_000;
+// Per review feedback, bumped this since the export currently takes ~40s
+const EXPORT_TIMEOUT_MS = 60_000;
 // After
-/** Page settle timeout (ms); some pages are slow to go idle */
-const SETTLE_TIMEOUT_MS = 60_000;
+/** Export timeout (ms); large exports are slow */
+const EXPORT_TIMEOUT_MS = 60_000;
 ```
 
 A field, described as a noun with its bounds:
@@ -236,9 +236,9 @@ A "why" worth keeping, cut to one clause:
 
 ```ts
 // Before
-// We have to put the mapping for the filter's own port before all the refusals,
-// because Chrome walks the list top to bottom and stops at the first match, so
-// otherwise the 127.* refusal below would catch the filter's address too.
+// We have to register /users/me before /users/:id, because the router walks the
+// list top to bottom and stops at the first match, so otherwise /users/:id would
+// treat "me" as an id.
 // After
-// Chrome applies the first matching rule, so this mapping comes first
+// The router uses the first matching route, so /users/me comes before /users/:id
 ```
