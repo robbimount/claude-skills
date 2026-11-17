@@ -5,7 +5,7 @@ description: >-
   own changes before a PR, merge or hand-off, or wants a diff, branch, PR or set of files checked
   for code smells, architectural smells, language anti-patterns, logic bugs, semantic overloading,
   temporal coupling, representable illegal states, unhandled edge cases, security holes, test gaps,
-  resource leaks, breaking changes, code cleanliness or yappy comments.
+  resource leaks, breaking changes, missing logs or metrics, code cleanliness or yappy comments.
 ---
 
 # Check yo self
@@ -41,7 +41,7 @@ once.
 ## 2. Dispatch every lens at once
 
 One message, one Agent call per lens, all in parallel: `general-purpose` agents with the most capable
-model passed explicitly (e.g. `model: "opus"`), never inherited. All twelve run whatever the diff's
+model passed explicitly (e.g. `model: "opus"`), never inherited. All thirteen run whatever the diff's
 size; if the user named lenses (e.g. `bugs, edges`), run only those. Over about 2,000 changed lines,
 split the files into areas and give each lens one agent per area.
 
@@ -57,6 +57,7 @@ split the files into areas and give each lens one agent per area.
 | **tests** | Changed behavior with no test; tests that would still pass if the logic broke; tests asserting internals rather than behavior; mocks that hide the real failure; flaky timing, sleeps and order dependence; missing negative and boundary cases |
 | **resources** | Listeners, timers, handles, connections and subscriptions never released; caches, maps and queues that grow without bound; N+1 calls; repeated work or quadratic loops on hot paths; missing timeouts or cancellation |
 | **compatibility** | Breaking changes to public APIs, schemas, config, CLI flags or message formats; data written by an older version; missing or irreversible migrations; old and new versions running side by side during a rollout; whether a rollback is safe |
+| **observability** | Where the change needs a log line or a metric (New Relic, or whatever monitoring the project uses), judged by the project's existing logging and metrics conventions: failures, retries, fallbacks and dropped work that leave no trace; new features, jobs or paths whose use, outcome or latency nobody can see; logs missing the ids needed to trace a run; wrong log levels; noisy logging in hot paths or loops; metrics with unbounded attribute values (ids, URLs) |
 | **cleanliness** | Naming, dead code, unused imports and parameters, leftover debug output and TODOs, inconsistency with the surrounding code, lint and format issues |
 | **comments** | Loads the `yeet-yo-yap` skill and applies its rules to the comments the change adds or touches, reporting each change it would make without making it |
 
